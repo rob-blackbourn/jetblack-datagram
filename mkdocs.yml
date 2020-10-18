@@ -1,0 +1,38 @@
+site_name: jetblack-datagram
+site_description: A Python 3 asyncio datagram library
+site_dir: docs
+
+docs_dir: documentation
+
+repo_name: rob-blackbourn/jetblack-datagram
+repo_url: https://github.com/rob-blackbourn/jetblack-datagram
+edit_uri: ""
+
+theme:
+    name: 'material'
+
+nav:
+  - index.md
+  - User Guide:
+    - user-guide/installation.md
+    - user-guide/getting-started.md
+  - API:
+    - jetblack_datagram: api/jetblack_datagram.md
+  
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - jetblack_markdown.autodoc:
+      class_from_init: true
+      ignore_dunder: true
+      ignore_private: true
+      ignore_all: false
+      ignore_inherited: false
+      follow_module_tree: false
+      prefer_docstring: true
+  - toc:
+      permalink: true
+
+extra_css:
+    - css/custom.css
