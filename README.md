@@ -10,7 +10,7 @@ Install using pip.
 pip install jetblack-datagram
 ```
 
-## Usage
+## Getting Started
 
 To create an echo server:
 
@@ -70,3 +70,8 @@ async def main():
 if __name__ == '__main__':
     asyncio.run(main())
 ```
+
+## Usage
+
+The UDP protocol is connection-less, so unlike TCP it makes
+to sense to provide a reader for each server connection.

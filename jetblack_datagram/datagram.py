@@ -66,6 +66,29 @@ class DatagramProtocolImpl(DatagramProtocol):
             raise ValueError('Not connected')
         return self._transport
 
+    async def read(self) -> Tuple[bytes, Address]:
+        """Read a datagram
+
+        Raises:
+            Exception: If an error has occurred.
+
+        Returns:
+            Tuple[bytes, Address]: THe message and address of the sender.
+        """
+        read_task = asyncio.create_task(self.queue.get())
+        done, _ = await asyncio.wait(
+            {self.error_waiter, read_task},
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        if self.error_waiter in done:
+            read_task.cancel()
+            try:
+                await read_task
+            except asyncio.CancelledError:
+                pass
+            raise self.error_waiter.exception() or Exception
+        return read_task.result()
+
 
 class DatagramBase:
     """The base class for datagram clients and servers"""
@@ -77,29 +100,6 @@ class DatagramBase:
             base (DatagramProtocolImpl): The datagram protocol implementation.
         """
         self._base = base
-
-    async def read(self) -> Tuple[bytes, Address]:
-        """Read a datagram
-
-        Raises:
-            Exception: If an error has occurred.
-
-        Returns:
-            Tuple[bytes, Address]: THe message and address of the sender.
-        """
-        read_task = asyncio.create_task(self._base.queue.get())
-        done, _ = await asyncio.wait(
-            {self._base.error_waiter, read_task},
-            return_when=asyncio.FIRST_COMPLETED
-        )
-        if self._base.error_waiter in done:
-            read_task.cancel()
-            try:
-                await read_task
-            except asyncio.CancelledError:
-                pass
-            raise self._base.error_waiter.exception() or Exception
-        return read_task.result()
 
     def close(self) -> None:
         """Close the connection
@@ -126,6 +126,17 @@ class DatagramServer(DatagramBase):
         """
         self._base.transport.sendto(data, addr)
 
+    async def read(self) -> Tuple[bytes, Address]:
+        """Read a datagram
+
+        Raises:
+            Exception: If an error has occurred.
+
+        Returns:
+            Tuple[bytes, Address]: THe message and address of the sender.
+        """
+        return await self._base.read()
+
 
 class DatagramClient(DatagramBase):
     """The datagram client"""
@@ -137,6 +148,18 @@ class DatagramClient(DatagramBase):
             data (bytes): The data to send.
         """
         self._base.transport.sendto(data)
+
+    async def read(self) -> bytes:
+        """Read a datagram
+
+        Raises:
+            Exception: If an error has occurred.
+
+        Returns:
+            bytes: THe message.
+        """
+        data, _ = await self._base.read()
+        return data
 
 
 async def create_datagram_server(
