@@ -58,8 +58,8 @@ async def main():
     print("Sending data")
     client.send(b'Hello, World!')
     print("reading data")
-    data, addr = await client.read()
-    print('Received %r from %s' % (data, addr))
+    data = await client.read()
+    print(f'Received {data!r}')
 
     print("closing client")
     client.close()
