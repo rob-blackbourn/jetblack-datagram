@@ -82,7 +82,7 @@ provide a callback for connections.
 The following methods are common for both clients and servers.
 
 * close() -> None
-* async wait_closed() -None
+* async wait_closed() -> None
 
 ### Server
 
