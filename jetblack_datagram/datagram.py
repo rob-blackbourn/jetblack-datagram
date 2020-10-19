@@ -17,23 +17,30 @@ Address = Tuple[str, int]
 class DatagramProtocolImpl(DatagramProtocol):
     """The datagram protocol implementation"""
 
-    def __init__(self, *, loop: Optional[AbstractEventLoop] = None, maxsize: int = 0):
+    def __init__(
+            self,
+            *,
+            loop: Optional[AbstractEventLoop] = None,
+            maxreadqueue: int = 0
+    ) -> None:
         """Initialise the datagram protocol implementation
 
         Args:
             loop (Optional[AbstractEventLoop], optional): The event loop.
                 Defaults to None.
-            maxsize (int, optional): The maximum size of the read queue.
-                Defaults to 0.
+            maxreadqueue (int, optional): The maximum size of the read
+                queue. Defaults to 0.
 
         Attributes:
-            queue (Queue[Tuple[bytes, Address]]): The read queue.
             close_waiter: (Future[bool]): A future that gets set when the
                 connection is closed.
             error_waiter: (Future[Any]): A future that gets set when there is an
                 error.
         """
-        self.queue: "Queue[Tuple[bytes, Address]]" = Queue(maxsize, loop=loop)
+        self._read_queue: "Queue[Tuple[bytes, Address]]" = Queue(
+            maxreadqueue,
+            loop=loop
+        )
         self._transport: Optional[DatagramTransport] = None
         self.close_waiter: "Future[bool]" = Future(loop=loop)
         self.error_waiter: "Future[Any]" = Future(loop=loop)
@@ -47,17 +54,17 @@ class DatagramProtocolImpl(DatagramProtocol):
             self.close_waiter.set_exception(exc)
 
     def datagram_received(self, data: bytes, addr: Address) -> None:
-        self.queue.put_nowait((data, addr))
+        self._read_queue.put_nowait((data, addr))
 
     def error_received(self, exc: Exception) -> None:
         self.error_waiter.set_exception(exc)
 
     @property
     def transport(self) -> DatagramTransport:
-        """The underlying transport
+        """The underlying transport.
 
         Raises:
-            ValueError: If the socket has not connected
+            ValueError: If the socket has not connected.
 
         Returns:
             DatagramTransport: The datagram transport.
@@ -75,7 +82,7 @@ class DatagramProtocolImpl(DatagramProtocol):
         Returns:
             Tuple[bytes, Address]: THe message and address of the sender.
         """
-        read_task = asyncio.create_task(self.queue.get())
+        read_task = asyncio.create_task(self._read_queue.get())
         done, _ = await asyncio.wait(
             {self.error_waiter, read_task},
             return_when=asyncio.FIRST_COMPLETED
@@ -112,6 +119,13 @@ class DatagramBase:
         Can be called after closing the connection.
         """
         await self._base.close_waiter
+
+    def abort(self) -> None:
+        """Close immediately without waiting for pending operations to complete.
+
+        Any buffered data will be lost.
+        """
+        self._base.transport.abort()
 
 
 class DatagramServer(DatagramBase):
@@ -162,11 +176,11 @@ class DatagramClient(DatagramBase):
         return data
 
 
-async def create_datagram_server(
+async def start_udp_server(
         addr: Address,
         *,
         loop: Optional[AbstractEventLoop] = None,
-        maxsize: int = 0
+        maxreadqueue: int = 0
 ) -> DatagramServer:
     """Create a datagram server.
 
@@ -174,7 +188,7 @@ async def create_datagram_server(
         addr (Address): The address of the server
         loop (Optional[AbstractEventLoop], optional): The asyncio event loop.
             Defaults to None.
-        maxsize (int, optional): The maximum size of the read queue. Defaults to
+        maxreadqueue (int, optional): The maximum size of the read queue. Defaults to
             0.
 
     Returns:
@@ -182,17 +196,18 @@ async def create_datagram_server(
     """
     loop = loop if loop is not None else asyncio.get_running_loop()
     _, protocol = await loop.create_datagram_endpoint(
-        lambda: DatagramProtocolImpl(loop=loop, maxsize=maxsize),
+        lambda: DatagramProtocolImpl(
+            loop=loop, maxreadqueue=maxreadqueue),
         local_addr=addr
     )
     return DatagramServer(cast(DatagramProtocolImpl, protocol))
 
 
-async def create_datagram_client(
+async def open_udp_connection(
         addr: Address,
         *,
         loop: Optional[AbstractEventLoop] = None,
-        maxsize: int = 0
+        maxreadqueue: int = 0
 ) -> DatagramClient:
     """Create a datagram client.
 
@@ -200,7 +215,7 @@ async def create_datagram_client(
         addr (Address): The address of the server.
         loop (Optional[AbstractEventLoop], optional): THe asyncio event loop.
             Defaults to None.
-        maxsize (int, optional): The maximum size of the read queue. Defaults to
+        maxreadqueue (int, optional): The maximum size of the read queue. Defaults to
             0.
 
     Returns:
@@ -208,6 +223,7 @@ async def create_datagram_client(
     """
     loop = loop if loop is not None else asyncio.get_running_loop()
     _, protocol = await loop.create_datagram_endpoint(
-        lambda: DatagramProtocolImpl(loop=loop, maxsize=maxsize),
+        lambda: DatagramProtocolImpl(
+            loop=loop, maxreadqueue=maxreadqueue),
         remote_addr=addr)
     return DatagramClient(cast(DatagramProtocolImpl, protocol))

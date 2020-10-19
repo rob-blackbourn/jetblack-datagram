@@ -1,6 +1,6 @@
-@[jetblack_datagram:create_datagram_server]
+@[jetblack_datagram:start_udp_server]
 
-@[jetblack_datagram:create_datagram_client]
+@[jetblack_datagram:open_udp_connection]
 
 @[jetblack_datagram:DatagramBase]
 

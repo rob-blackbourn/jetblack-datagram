@@ -1,14 +1,14 @@
 from .datagram import (
-    create_datagram_client,
-    create_datagram_server,
+    open_udp_connection,
+    start_udp_server,
     DatagramBase,
     DatagramClient,
     DatagramServer
 )
 
 __all__ = [
-    "create_datagram_client",
-    "create_datagram_server",
+    "open_udp_connection",
+    "start_udp_server",
     "DatagramBase",
     "DatagramClient",
     "DatagramServer"

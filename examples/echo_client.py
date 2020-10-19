@@ -1,10 +1,10 @@
 import asyncio
 
-from jetblack_datagram import create_datagram_client
+from jetblack_datagram import open_udp_connection
 
 
 async def main():
-    client = await create_datagram_client(('127.0.0.1', 9999))
+    client = await open_udp_connection(('127.0.0.1', 9999))
 
     print("Sending data")
     client.send(b'Hello, World!')
