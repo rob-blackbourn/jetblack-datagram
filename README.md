@@ -17,8 +17,8 @@ analagous to the
 function provided by `asyncio`.
 This returns a `DatagramServer`, which provides methods for reading (`read`), writing (`sendto`),
 and closing (`close` and `wait_closed`). This differs from the TCP variant which provides
-a callback when a client connects with a read and write stream. A UDP is connection-less
-there is no connect (or disconnect) event. Also the data is sent and received in *packets*,
+a callback when a client connects with a read and write stream. This is because UDP is connection-less
+so there is no connect (or disconnect) event. Also the data is sent and received in *packets*,
 so there seems to eb no benefit to provide separate read and write stream.
 
 The following creates a server, reads then writes some data.
