@@ -226,9 +226,45 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        UDP Datagram library
+      </label>
+    
     <a href="." title="UDP Datagram library" class="md-nav__link md-nav__link--active">
       UDP Datagram library
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    Status
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -334,6 +370,29 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    Status
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -346,7 +405,47 @@
                 
                 
                 <h1 id="udp-datagram-library">UDP Datagram library<a class="headerlink" href="#udp-datagram-library" title="Permanent link">&para;</a></h1>
-<p>A Python 3 asyncio helper library for UDP datagram clients and servers.</p>
+<p>A Python 3.8+ asyncio helper library for UDP datagram clients and servers.</p>
+<h2 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h2>
+<p>This is working, but still under continuous development, so there may be breaking changes.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>This package provides a simple asyncio API for UDP datagrams, following a
+similar pattern to the TCP streams API.</p>
+<p>A UDP server is started by calling <code>start_udp_server</code> which is
+analogous to the
+<a href="https://docs.python.org/3/library/asyncio-stream.html#asyncio.start_server">start_server</a>
+function provided by <code>asyncio</code>.
+This returns a <code>DatagramServer</code>, which provides methods for reading (<code>read</code>), writing (<code>sendto</code>),
+and closing (<code>close</code> and <code>wait_closed</code>). This differs from the TCP variant which provides
+a callback when a client connects with a read and write stream. This is because UDP is connection-less
+so there is no connect (or disconnect) event. Also the data is sent and received in <em>packets</em>,
+so there seems to eb no benefit to provide separate read and write stream.</p>
+<p>The following creates a server, reads then writes some data.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">server</span> <span class="o">=</span> <span class="k">await</span> <span class="n">start_udp_server</span><span class="p">((</span><span class="s1">&#39;0.0.0.0&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">))</span>
+
+<span class="n">data</span><span class="p">,</span> <span class="n">addr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">server</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Received </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">addr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">server</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span> <span class="n">addr</span><span class="p">)</span>
+
+<span class="n">server</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="k">await</span> <span class="n">server</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
+</code></pre></div>
+
+<p>A UDP client is started by calling <code>open_udp_connection</code> which is analogous
+to the
+<a href="https://docs.python.org/3/library/asyncio-stream.html#asyncio.open_connection">open_connection</a>
+function provided by the <code>asyncio</code> library for TCP, which returns a <code>DatagramClient</code>. This provides similar functionality to the
+server, however the <code>addr</code> is not present when reading or writing, as the socket is bound
+to the server address when it is created.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">client</span> <span class="o">=</span> <span class="k">await</span> <span class="n">open_udp_connection</span><span class="p">((</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">))</span>
+
+<span class="n">client</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;Hello, World!&#39;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Received </span><span class="si">{</span><span class="n">data</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
+</code></pre></div>
                 
                   
                 

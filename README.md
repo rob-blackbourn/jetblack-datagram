@@ -1,6 +1,6 @@
 # jetblack-datagram
 
-A Python 3 asyncio helper library for UDP datagram clients and servers.
+A Python 3.8+ asyncio helper library for UDP datagram clients and servers.
 
 ## Status
 
