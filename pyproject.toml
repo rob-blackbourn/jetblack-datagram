@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "jetblack-datagram"
-version = "0.4.0"
+version = "0.4.1"
 description = "A Python 3 asyncio datagram library"
 authors = ["Rob Blackbourn <rob.blackbourn@gmail.com>"]
 license = "Apache-2.0"

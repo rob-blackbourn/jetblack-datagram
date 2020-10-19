@@ -54,7 +54,10 @@ class DatagramProtocolImpl(DatagramProtocol):
             self.close_waiter.set_exception(exc)
 
     def datagram_received(self, data: bytes, addr: Address) -> None:
-        self._read_queue.put_nowait((data, addr))
+        try:
+            self._read_queue.put_nowait((data, addr))
+        except asyncio.QueueFull as error:
+            self.error_waiter.set_exception(error)
 
     def error_received(self, exc: Exception) -> None:
         self.error_waiter.set_exception(exc)
