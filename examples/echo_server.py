@@ -1,12 +1,12 @@
 import asyncio
 
-from jetblack_datagram import create_datagram_server
+from jetblack_datagram import start_udp_server
 
 
 async def main():
     print("Starting UDP server")
 
-    server = await create_datagram_server(('127.0.0.1', 9999))
+    server = await start_udp_server(('0.0.0.0', 9999))
     print("Server created")
 
     count = 0
