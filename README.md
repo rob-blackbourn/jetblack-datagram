@@ -12,7 +12,7 @@ This package provides a simple asyncio API for UDP datagrams, following a
 similar pattern to the TCP streams API.
 
 A UDP server is started by calling `start_udp_server` which is
-analagous to the
+analogous to the
 [start_server](https://docs.python.org/3/library/asyncio-stream.html#asyncio.start_server)
 function provided by `asyncio`.
 This returns a `DatagramServer`, which provides methods for reading (`read`), writing (`sendto`),
