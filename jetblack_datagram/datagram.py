@@ -140,7 +140,7 @@ class DatagramServer(DatagramBase):
         """
         self._base.transport.sendto(data, addr)
 
-    async def read(self) -> Tuple[bytes, Address]:
+    async def recvfrom(self) -> Tuple[bytes, Address]:
         """Read a datagram
 
         Raises:
@@ -163,7 +163,7 @@ class DatagramClient(DatagramBase):
         """
         self._base.transport.sendto(data)
 
-    async def read(self) -> bytes:
+    async def recv(self) -> bytes:
         """Read a datagram
 
         Raises:

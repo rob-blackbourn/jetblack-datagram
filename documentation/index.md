@@ -26,8 +26,8 @@ The following creates a server, reads then writes some data.
 ```python
 server = await start_udp_server(('0.0.0.0', 8000))
 
-data, addr = await server.read()
-print(f"Received {data} from {addr}")
+data, addr = await server.recvfrom()
+print(f"Received {data!r} from {addr}")
 server.sendto(b"Hello", addr)
 
 server.close()
@@ -44,9 +44,9 @@ to the server address when it is created.
 ```python
 client = await open_udp_connection(('127.0.0.1', 8000))
 
-client.send(b'Hello, World!')
-data = await client.read()
-print(f'Received {data}')
+client.send(b"Hello, World!")
+data = await client.recv()
+print(f"Received {data!r}")
 
 client.close()
 await client.wait_closed()

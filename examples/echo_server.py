@@ -13,9 +13,9 @@ async def main():
     while count < 5:
         count += 1
         print("Reading")
-        data, addr = await server.read()
-        print('Received %r from %s' % (data, addr))
-        print('Send %r to %s' % (data, addr))
+        data, addr = await server.recvfrom()
+        print(f"Received {data!r} from {addr}")
+        print(f"Send {data!r} to {addr}")
         server.sendto(data, addr)
 
     print("Closing")

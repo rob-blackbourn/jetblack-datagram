@@ -15,9 +15,9 @@ async def main():
     while count < 5:
         count += 1
         print("Reading")
-        data, addr = await server.read()
-        print('Received %r from %s' % (data, addr))
-        print('Send %r to %s' % (data, addr))
+        data, addr = await server.recvfrom()
+        print(f"Received {data!r} from {addr}")
+        print(f"Send {data!r} to {addr}")
         server.sendto(data, addr)
 
     print("Closing")
@@ -44,10 +44,10 @@ async def main():
     client = await open_udp_connection(('127.0.0.1', 9999))
 
     print("Sending data")
-    client.send(b'Hello, World!')
+    client.send(b"Hello, World!")
     print("reading data")
-    data = await client.read()
-    print(f'Received {data!r}')
+    data = await client.recv()
+    print(f"Received {data!r}")
 
     print("closing client")
     client.close()

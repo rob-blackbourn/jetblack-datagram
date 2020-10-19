@@ -26,7 +26,7 @@ The following creates a server, reads then writes some data.
 ```python
 server = await start_udp_server(('0.0.0.0', 8000))
 
-data, addr = await server.read()
+data, addr = await server.recvfrom()
 print(f"Received {data} from {addr}")
 server.sendto(b"Hello", addr)
 
@@ -44,9 +44,9 @@ to the server address when it is created.
 ```python
 client = await open_udp_connection(('127.0.0.1', 8000))
 
-client.send(b'Hello, World!')
-data = await client.read()
-print(f'Received {data}')
+client.send(b"Hello, World!")
+data = await client.recv()
+print(f"Received {data}")
 
 client.close()
 await client.wait_closed()
@@ -79,9 +79,9 @@ async def main():
     while count < 5:
         count += 1
         print("Reading")
-        data, addr = await server.read()
-        print('Received %r from %s' % (data, addr))
-        print('Send %r to %s' % (data, addr))
+        data, addr = await server.recvfrom()
+        print(f"Received {data!r} from {addr}")
+        print(f"Send {data!r} to {addr}")
         server.sendto(data, addr)
 
     print("Closing")
@@ -108,10 +108,10 @@ async def main():
     client = await open_udp_connection(('127.0.0.1', 9999))
 
     print("Sending data")
-    client.send(b'Hello, World!')
+    client.send(b"Hello, World!")
     print("reading data")
-    data = await client.read()
-    print(f'Received {data!r}')
+    data = await client.recv()
+    print(f"Received {data!r}")
 
     print("closing client")
     client.close()
@@ -141,14 +141,14 @@ The following methods are common for both clients and servers.
 The following methods are specific to the server.
 
 * sendto(data: bytes, addr: Union[Address, str]) -> None
-* async read() -> Tuple[bytes, Address]
+* async recvfrom() -> Tuple[bytes, Address]
 
 ### Client
 
 The following methods are specific to the client.
 
 * send(data: bytes) -> None
-* async read() -> bytes
+* async recv() -> bytes
 
 ### Helpers
 
@@ -161,7 +161,7 @@ async def start_udp_server(
         addr: Address,
         *,
         loop: Optional[AbstractEventLoop] = None,
-        maxsize: int = 0
+        maxreadqueue: int = 0
 ) -> DatagramServer:
 ```
 
@@ -172,6 +172,6 @@ async def open_udp_connection(
         addr: Address,
         *,
         loop: Optional[AbstractEventLoop] = None,
-        maxsize: int = 0
+        maxreadqueue: int = 0
 ) -> DatagramClient:
 ```

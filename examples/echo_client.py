@@ -9,7 +9,7 @@ async def main():
     print("Sending data")
     client.send(b'Hello, World!')
     print("reading data")
-    data = await client.read()
+    data = await client.recv()
     print(f'Received {data!r}')
 
     print("closing client")
