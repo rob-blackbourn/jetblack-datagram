@@ -37,7 +37,7 @@ await server.wait_closed()
 A UDP client is started by calling `create_datagram_client` which is analogous
 to the
 [open_connection](https://docs.python.org/3/library/asyncio-stream.html#asyncio.open_connection)
-function provided by the `asyncio` library for TCP. This provides similar functionality to the
+function provided by the `asyncio` library for TCP, which returns a `DatagramClient`. This provides similar functionality to the
 server, however the `addr` is not present when reading or writing, as the socket is bound
 to the server address when it is created.
 
