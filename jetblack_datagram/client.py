@@ -14,16 +14,17 @@ from typing import Any, Optional, Tuple, Union, cast
 Address = Tuple[str, int]
 
 
-class DatagramProtocolImpl(DatagramProtocol):
-    """The datagram protocol implementation"""
+class DatagramClientProtocol(DatagramProtocol):
+    """The datagram client protocol implementation"""
 
     def __init__(
             self,
             *,
             loop: Optional[AbstractEventLoop] = None,
-            maxreadqueue: int = 0
+            maxreadqueue: int = 0,
+            buf: Optional[bytes] = None
     ) -> None:
-        """Initialise the datagram protocol implementation
+        """Initialise the datagram client protocol implementation
 
         Args:
             loop (Optional[AbstractEventLoop], optional): The event loop.
@@ -41,6 +42,8 @@ class DatagramProtocolImpl(DatagramProtocol):
             maxreadqueue,
             loop=loop
         )
+        if buf is not None:
+            self._read_queue.put_nowait(buf)
         self._transport: Optional[DatagramTransport] = None
         self.close_waiter: "Future[bool]" = Future(loop=loop)
         self.error_waiter: "Future[Any]" = Future(loop=loop)
@@ -100,10 +103,10 @@ class DatagramProtocolImpl(DatagramProtocol):
         return read_task.result()
 
 
-class DatagramBase:
+class DatagramClient:
     """The base class for datagram clients and servers"""
 
-    def __init__(self, base: DatagramProtocolImpl) -> None:
+    def __init__(self, base: DatagramClientProtocol) -> None:
         """Initialise the datagram base class
 
         Args:
@@ -130,36 +133,8 @@ class DatagramBase:
         """
         self._base.transport.abort()
 
-
-class DatagramServer(DatagramBase):
-    """The datagram server"""
-
-    def sendto(self, data: bytes, addr: Union[Address, str]) -> None:
-        """Send a datagram
-
-        Args:
-            data (bytes): The data to send
-            addr (Union[Address, str]): The address of the recipient.
-        """
-        self._base.transport.sendto(data, addr)
-
-    async def recvfrom(self) -> Tuple[bytes, Address]:
-        """Read a datagram
-
-        Raises:
-            Exception: If an error has occurred.
-
-        Returns:
-            Tuple[bytes, Address]: THe message and address of the sender.
-        """
-        return await self._base.read()
-
-
-class DatagramClient(DatagramBase):
-    """The datagram client"""
-
     def send(self, data: bytes) -> None:
-        """Send the data to the server
+        """Send a datagram.
 
         Args:
             data (bytes): The data to send.
@@ -175,44 +150,16 @@ class DatagramClient(DatagramBase):
         Returns:
             bytes: THe message.
         """
-        data, _ = await self._base.read()
-        return data
+        return await self._base.read()
 
 
-async def create_datagram_server(
-        addr: Address,
-        *,
-        loop: Optional[AbstractEventLoop] = None,
-        maxreadqueue: int = 0
-) -> DatagramServer:
-    """Create a datagram server.
-
-    Args:
-        addr (Address): The address of the server
-        loop (Optional[AbstractEventLoop], optional): The asyncio event loop.
-            Defaults to None.
-        maxreadqueue (int, optional): The maximum size of the read queue. Defaults to
-            0.
-
-    Returns:
-        DatagramServer: A datagram server.
-    """
-    loop = loop if loop is not None else asyncio.get_running_loop()
-    _, protocol = await loop.create_datagram_endpoint(
-        lambda: DatagramProtocolImpl(
-            loop=loop, maxreadqueue=maxreadqueue),
-        local_addr=addr
-    )
-    return DatagramServer(cast(DatagramProtocolImpl, protocol))
-
-
-async def create_datagram_client(
+async def open_udp_connection(
         addr: Address,
         *,
         loop: Optional[AbstractEventLoop] = None,
         maxreadqueue: int = 0
 ) -> DatagramClient:
-    """Create a datagram client.
+    """Open a UDP connection.
 
     Args:
         addr (Address): The address of the server.
@@ -226,7 +173,9 @@ async def create_datagram_client(
     """
     loop = loop if loop is not None else asyncio.get_running_loop()
     _, protocol = await loop.create_datagram_endpoint(
-        lambda: DatagramProtocolImpl(
-            loop=loop, maxreadqueue=maxreadqueue),
+        lambda: DatagramClientProtocol(
+            loop=loop,
+            maxreadqueue=maxreadqueue
+        ),
         remote_addr=addr)
-    return DatagramClient(cast(DatagramProtocolImpl, protocol))
+    return DatagramClient(cast(DatagramClientProtocol, protocol))
